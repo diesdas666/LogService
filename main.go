@@ -1,17 +1,22 @@
 package main
 
 import (
-	"example_consumer/internal/kafka/configkafka"
+	"example_consumer/internal/asyncApi/configkafka"
+	"example_consumer/internal/service"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"os"
 	"os/signal"
+	"time"
 )
 
 func main() {
 
-	// Set up Kafka consumer configuration
+	logService := service.LogService{
+		//Database konfig or address
+	}
 
+	// Set up Kafka consumer configuration
 	config := &kafka.ConfigMap{
 		configkafka.Host:   configkafka.Kafka.Host, // Update with your broker's address
 		configkafka.Group:  configkafka.Kafka.Group,
@@ -32,21 +37,34 @@ func main() {
 	}
 
 	// Handle OS signals to gracefully close the consumer
-	signals := make(chan os.Signal, 1)
+	sigchan := make(chan os.Signal, 1)
 
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(sigchan, os.Interrupt)
+
 	run := true
 	for run {
 		select {
-		case sig := <-signals:
+		case sig := <-sigchan:
 			fmt.Printf("Caught signal %v: terminating\n", sig)
 			run = false
-		case ev := <-consumer.Events():
-			switch e := ev.(type) {
-			case *kafka.Message:
-				// Process the message
-				fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, string(e.Value))
+		//case ev := <-consumer.Events():
+		//	switch e := ev.(type) {
+		//	case *kafka.Message:
+		//		// Process the message
+		//		fmt.Printf("Received message on topic %s: %s\n", *e.TopicPartition.Topic, string(e.Value))
+		//	}
+		default:
+			ev, err := consumer.ReadMessage(100 * time.Millisecond)
+			if err != nil {
+				// Errors are informational and automatically handled by the consumer
+				continue
 			}
+			err = logService.UpdateStatusOfLoadingStation(ev)
+			if err != nil {
+				fmt.Printf("Error procesingevent: %v\n", err)
+			}
+			fmt.Printf("Consumed event from topic %s: key = %-10s value = %s\n",
+				*ev.TopicPartition.Topic, string(ev.Key), string(ev.Value))
 		}
 	}
 	// Close the consumer
