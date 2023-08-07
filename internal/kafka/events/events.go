@@ -6,7 +6,6 @@ import (
 	"github.com/c0olix/goChan"
 	"github.com/c0olix/goChan/kafka"
 	"github.com/go-playground/validator/v10"
-
 	"github.com/pkg/errors"
 	kafkaGo "github.com/segmentio/kafka-go"
 	"reflect"

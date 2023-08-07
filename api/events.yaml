@@ -1,0 +1,31 @@
+asyncapi: 2.4.0
+info:
+  title: log-service
+  description: This API describes the asynchronous message handling for the log-service
+  version: 0.1.0
+channels:
+  CUSTOMER_DATA_CREATE:
+    subscribe:
+      operationId: produceCustomerRegistrationEvent
+      message:
+        $ref: "#/components/messages/CustomerRegistrationEventBody"
+components:
+  messages:
+    CustomerRegistrationEventBody:
+      name: CustomerRegistrationEventBody
+      description: Event which holds information about a newly registered customer
+      payload:
+        $ref: "#/components/schemas/CustomerRegistrationEventPayload"
+
+  schemas:
+    CustomerRegistrationEventPayload:
+      type: object
+      title: CustomerRegistrationEventPayload
+      required:
+        - customerNumber
+        - email
+      properties:
+        customerNumber:
+          type: string
+        email:
+          type: string
